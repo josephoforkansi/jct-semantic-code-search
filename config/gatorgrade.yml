@@ -1,0 +1,123 @@
+# --> honor code in README.md
+- README.md:
+    - description: Ensure that the README.md file exists inside of the root of the GitHub repository
+      check: ConfirmFileExists
+    - description: Delete the phrase 'Add Your Name Here' and add your own name as an Honor Code pledge in README.md
+      check: MatchFileFragment
+      options:
+        fragment: "Add Your Name Here"
+        count: 0
+        exact: true
+    - description: Retype the every word in the Honor Code pledge in README.md
+      check: MatchFileFragment
+      options:
+        fragment: "I adhered to the Allegheny College Honor Code while completing this examination."
+        count: 2
+        exact: true
+
+# --> check the Python program 1
+- source/problem1.py:
+  - description: Ensure that the source/problem1.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem1.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 2
+- source/problem2.py:
+  - description: Ensure that the source/problem2.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem2.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+
+# --> check the Python program 3
+- source/problem3.py:
+  - description: Ensure that the source/problem3.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem3.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 4
+- source/problem4.py:
+  - description: Ensure that the source/problem4.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem4.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 5
+- source/problem5.py:
+  - description: Ensure that the source/problem5.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem5.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 6
+- source/problem6.py:
+  - description: Ensure that the source/problem6.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem6.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 7
+- source/problem7.py:
+  - description: Ensure that the source/problem7.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem7.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 8
+- source/problem8.py:
+  - description: Ensure that the source/problem8.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem8.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check the Python program 9
+- source/problem9.py:
+  - description: Ensure that the source/problem9.py file exists in the source directory
+    check: ConfirmFileExists
+  - description: Complete all TODOs, remove the TODO markers in the source/problem9.py
+    check: MatchFileFragment
+    options:
+      fragment: TODO
+      count: 0
+      exact: true
+
+# --> check that the number of commits in the Git repository is beyond a threshold
+# count number of commits in the GitHub repository
+- description: Have at least a specific minimum number of commits (5) in repository
+  check: CountCommits
+  options:
+    count: 5
