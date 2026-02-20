@@ -1,5 +1,10 @@
-.mypy_cache/
-.ruff_cache/
-.pytest_cache/
-coverage.xml
-junit/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+eval_results/
