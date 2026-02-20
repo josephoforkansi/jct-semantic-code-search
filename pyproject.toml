@@ -1,7 +1,7 @@
 [project]
 name = "jct-semantic-code-search"
 version = "0.1.0"
-description = "Semantic behavioral code search for Python"
+description = "Semantic behavioral code search engine for Python"
 requires-python = ">=3.10"
 
 [project.dependencies]
