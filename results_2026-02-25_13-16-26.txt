@@ -1,0 +1,29 @@
+Query: safe file reading with error handling
+
+1. Score: 0.696 | file_handler.py:1 | Function safe_read_file
+Code snippet:
+   def safe_read_file(path):
+       """Read file content safely with proper error handling."""
+       try:
+           with open(path, 'r', encoding='utf-8') as f:
+               return f.read()
+       except FileNotFoundError:
+           print(f"File '{path}' not found.")
+           return None
+       except PermissionError:
+           print(f"Permission denied for '{path}'.")
+           return None
+       except Exception as e:
+           print(f"Unexpected error: {e}")
+           return None
+Docstring: Read file content safely with proper error handling....
+------------------------------------------------------------
+2. Score: 0.544 | exam_file.py:3 | Function read_file
+Code snippet:
+   def read_file(filename):
+       # Student attempt: missing error handling
+       f = open(filename)
+       data = f.read()
+       f.close()
+       return data
+------------------------------------------------------------
