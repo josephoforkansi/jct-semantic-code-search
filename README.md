@@ -291,13 +291,31 @@ Avg Score: 0.589
 
 ## ⚠️ Error Handling
 
-JCT includes basic input validation and safeguards:
+JCT includes input validation and robust error handling to ensure stability:
 
 - Empty queries are ignored to prevent invalid searches  
-- Invalid or missing files are handled gracefully during parsing  
-- Exceptions during file processing do not crash the system  
+- Invalid or non-Python files are safely skipped during parsing  
+- Exceptions during AST parsing do not crash the system  
+- File access errors are handled gracefully in example code  
 
-Example:
+Example validation (from `demo.py`):
+
+```python
+if not q:
+    continue
+```
+
+Example safe file handling (from file_handler.py):
+
+```python
+try:
+    with open(path, 'r', encoding='utf-8') as f:
+        return f.read()
+except FileNotFoundError:
+    return None
+```
+
+Example behavior:
 
 ```text
 Query (or 'quit'): 
@@ -324,11 +342,21 @@ Test coverage includes:
 
 ## 🔄 Development Activity
 
-This repository was developed iteratively with regular commits, demonstrating:
+This repository was developed iteratively over time with regular commits.
 
-- performance improvements
-- evaluation refinements
-- architecture evolution
+Key development phases:
+
+- Initial prototype: AST-based chunking and parsing
+- Semantic layer: embedding model integration (Sentence Transformers)
+- Retrieval system: cosine similarity search and ranking
+- Evaluation framework: benchmark dataset and metrics (Precision@K, NDCG)
+- Refinement: hybrid scoring and improved ranking accuracy
+
+The commit history reflects continuous improvements in:
+
+- system performance
+- evaluation accuracy
+- architecture design
 
 ---
 
