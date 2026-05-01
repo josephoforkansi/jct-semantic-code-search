@@ -326,17 +326,38 @@ Query (or 'quit'):
 
 ## 🧪 Testing
 
-Run tests:
+Run the test suite using `uv`:
 
 ```bash
-pytest tests/
+uv run pytest tests/
 ```
 
-Test coverage includes:
+Example output:
 
-- embedding generation
-- code chunking
-- search ranking
+```text
+collected 5 items                                                                                                                                                   
+
+tests\test_chunking.py ...                                                                                                                                    [ 60%]
+tests\test_embedding.py .                                                                                                                                     [ 80%]
+tests\test_search.py .                                                                                                                                        [100%]
+
+======================================================================== 5 passed in 19.20s ========================================================================
+```
+
+Test Coverage
+
+The test suite validates core components of the JCT system:
+
+- Code Chunking
+Ensures Python files are correctly parsed into functions/classes and enriched with detected concepts.
+- Embedding Generation
+Verifies that semantic embeddings are produced with the correct shape and structure.
+- Search & Ranking
+Confirms that the semantic search pipeline returns valid, ranked results based on query intent.
+
+Notes
+- Tests are designed to run quickly and deterministically.
+- The embedding model is handled via controlled inputs to ensure stable execution.
 
 ---
 
