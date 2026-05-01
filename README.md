@@ -128,6 +128,7 @@ jct-semantic-code-search/
 ├── README.md
 ├── pyproject.toml
 └── .gitignore
+```
 
 ---
 
@@ -139,10 +140,10 @@ Run JCT in under 1 minute:
 git clone https://github.com/josephoforkansi/jct-semantic-code-search.git
 cd jct-semantic-code-search
 uv sync
-uv run python src/jct/search.py
+uv run python -m jct.demo
 ```
 
-JCT uses uv for fast dependency management.
+JCT uses `uv` for fast dependency management and reproducible environments.
 
 ---
 
@@ -150,46 +151,61 @@ JCT uses uv for fast dependency management.
 
 ```bash
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate      # Mac/Linux
+venv\Scripts\activate         # Windows
 pip install -e .
-python src/jct/search.py
+python -m jct.demo
 ```
+
+> Note: JCT is structured as a Python package and should be executed using
+> `-m jct.<module>` to ensure correct module resolution.
 
 ---
 
-## ▶️ Usage
+## ▶️ Demonstration
 
-Run the interactive search:
+Run the interactive semantic search:
 
 ```bash
-uv run python src/jct/demo.py
+uv run python -m jct.demo
 ```
 
 Example interaction:
 
 ```text
-Query:
-safe file reading with error handling
+Query: safe file reading with error handling
 
-Top Results:
-file_handler.py      score: 0.92
+Top results for 'safe file reading with error handling':
+1. Score: 0.720 | file_handler.py:1 | Function safe_read_file
+   Code snippet:
+   def safe_read_file(path):
+       """Read file content safely with proper error handling."""
+       try:
+           with open(path, 'r', encoding='utf-8') as f:
+               return f.read()
+       except FileNotFoundError:
+           print(f"File '{path}' not found.")
+           return None
+       except PermissionError:
+           print(f"Permission denied for '{path}'.")
+           return None
+       except Exception as e:
+           print(f"Unexpected error: {e}")
+           return None
+   Docstring: Read file content safely with proper error handling....
+------------------------------------------------------------
+2. Score: 0.551 | exam_file.py:3 | Function read_file
+   Code snippet:
+   def read_file(filename):
+       # Student attempt: missing error handling
+       f = open(filename)
+       data = f.read()
+       f.close()
+       return data
+------------------------------------------------------------
 ```
 
----
-
-## 🧪 Demonstration
-
-JCT supports concept-based retrieval:
-
-```text
-Query:
-validate user input until correct
-
-Result:
-input_validator.py   score: 0.88
-```
-
-This demonstrates that the system retrieves code based on behavior, not keywords.
+This example demonstrates that JCT retrieves code based on behavior and intent, not exact keywords, correctly prioritizing robust implementations over incomplete ones.
 
 ---
 
@@ -198,7 +214,7 @@ This demonstrates that the system retrieves code based on behavior, not keywords
 JCT includes evaluation scripts and benchmark datasets:
 
 ```bash
-uv run python src/jct/evaluate.py
+uv run python -m jct.evaluate
 ```
 
 Metrics include:
@@ -211,18 +227,81 @@ These experiments support the findings described in the research report.
 
 ---
 
-## 🛡 Error Handling
+## 📈 Sample Evaluation Output
 
-JCT includes validation for:
+The following results are generated using the evaluation pipeline on the
+concept-labeled dataset.
 
-- empty queries
-- invalid file paths
-- AST parsing failures
+```text
+📂 Indexing dataset: eval_benchmarks/concepts/file_handling/generated
+✅ Ground truth files detected: 10
+Batches: 100%|███████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00,  3.97it/s]
+✅ Indexed 40 chunks
+
+🔍 Query: safe file reading with error handling
+Precision@5: 1.000
+NDCG@5: 1.000
+Success@1: 100%
+Avg Score: 0.726
+  1. [0.742] file_handling_100_3.py:1 safe_read_file
+  2. [0.742] file_handling_100_4.py:1 safe_read_file
+  3. [0.715] file_handling_100_0.py:1 safe_read_file
+  4. [0.715] file_handling_100_1.py:1 safe_read_file
+  5. [0.715] file_handling_100_6.py:1 safe_read_file
+------------------------------------------------------------
+
+🔍 Query: handle file not found exception
+Precision@5: 0.000
+NDCG@5: 0.000
+Success@1: 0%
+Avg Score: 0.541
+  1. [0.548] file_handling_25_1.py:1 read_file
+  2. [0.548] file_handling_25_4.py:1 read_file
+  3. [0.548] file_handling_25_7.py:1 read_file
+  4. [0.538] file_handling_25_8.py:1 read_file
+  5. [0.525] file_handling_50_0.py:1 read_file
+------------------------------------------------------------
+
+🔍 Query: read file safely with try except
+Precision@5: 1.000
+NDCG@5: 1.000
+Success@1: 100%
+Avg Score: 0.708
+  1. [0.720] file_handling_100_3.py:1 safe_read_file
+  2. [0.720] file_handling_100_4.py:1 safe_read_file
+  3. [0.700] file_handling_100_0.py:1 safe_read_file
+  4. [0.700] file_handling_100_1.py:1 safe_read_file
+  5. [0.700] file_handling_100_6.py:1 safe_read_file
+------------------------------------------------------------
+
+🔍 Query: robust file reading function
+Precision@5: 0.400
+NDCG@5: 0.553
+Success@1: 100%
+Avg Score: 0.589
+  1. [0.602] file_handling_100_3.py:1 safe_read_file
+  2. [0.602] file_handling_100_4.py:1 safe_read_file
+  3. [0.580] file_handling_50_3.py:1 read_file
+  4. [0.580] file_handling_50_5.py:1 read_file
+  5. [0.580] file_handling_50_7.py:1 read_file
+------------------------------------------------------------
+```
+
+---
+
+## ⚠️ Error Handling
+
+JCT includes basic input validation and safeguards:
+
+- Empty queries are ignored to prevent invalid searches  
+- Invalid or missing files are handled gracefully during parsing  
+- Exceptions during file processing do not crash the system  
 
 Example:
 
 ```text
-Error: Query cannot be empty
+Query (or 'quit'): 
+(no results returned — empty query skipped)
 ```
 
 ---
@@ -240,12 +319,6 @@ Test coverage includes:
 - embedding generation
 - code chunking
 - search ranking
-
----
-
-## ✅ Reproducibility
-
-JCT has been tested on `macOS`, `linux` and `Windows` environments and can be installed and executed by users without prior setup.
 
 ---
 
@@ -293,6 +366,6 @@ Planned extensions include:
 
 ---
 
-📜 License
+## ✅ Reproducibility
 
-MIT License
+JCT has been tested on `macOS`, `linux` and `Windows` environments and can be installed and executed by users without prior setup.
