@@ -352,11 +352,14 @@ Key development phases:
 - Evaluation framework: benchmark dataset and metrics (Precision@K, NDCG)
 - Refinement: hybrid scoring and improved ranking accuracy
 
-The commit history reflects continuous improvements in:
+![Commit History](docs/commit_history.png)
 
-- system performance
-- evaluation accuracy
-- architecture design
+The commit history demonstrates continuous progress, including:
+
+- system design and architecture
+- semantic embedding integration
+- evaluation framework development
+- ranking and performance improvements
 
 ---
 
