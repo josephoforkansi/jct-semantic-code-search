@@ -8,3 +8,4 @@ env/
 venv/
 .env
 eval_results/
+.jct_cache/

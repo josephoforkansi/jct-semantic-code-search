@@ -228,6 +228,7 @@ dependencies = [
     { name = "colorama" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "rich" },
     { name = "sentence-transformers" },
 ]
 
@@ -241,6 +242,7 @@ requires-dist = [
     { name = "colorama" },
     { name = "numpy" },
     { name = "pytest", marker = "extra == 'dev'" },
+    { name = "rich", specifier = ">=14.3.3" },
     { name = "sentence-transformers" },
 ]
 provides-extras = ["dev"]

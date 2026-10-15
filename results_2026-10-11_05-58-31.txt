@@ -1,0 +1,19 @@
+Query: show me where the interface is defined
+Source: C:\Users\jofok\Downloads\computer-science-202-algorithm-engineering-project-1-josephoforkansi
+Minimum score: 0.5
+
+1. Score: 0.566 | systemsense/systemsense/constants.py:14 | Class Interface
+Code snippet:
+class Interface:
+    """Define the Interface dataclass for constant(s)."""
+
+    Welcome_System_Info: str
+    Panel_System_Information: str
+    Parameter_System: str
+    Parameter_Value_System: str
+    Welcome_Benchmark_Info: str
+    Panel_Benchmark_Information: str
+    Parameter_Benchmark: str
+    Parameter_Value_Benchmark: str
+Docstring: Define the Interface dataclass for constant(s).
+------------------------------------------------------------

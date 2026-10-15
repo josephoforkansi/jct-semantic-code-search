@@ -1,6 +1,16 @@
 {
     "cSpell.words": [
+        "checkmark",
+        "colorama",
+        "lppk",
         "NDCG",
-        "pytest"
+        "noninteractive",
+        "nonpositive",
+        "numpy",
+        "Ollama",
+        "pytest",
+        "pythonpath",
+        "systemsense",
+        "venv"
     ]
 }
