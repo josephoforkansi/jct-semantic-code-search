@@ -29,3 +29,9 @@ packages = ["src/jct"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "types-colorama>=0.4.15.20260508",
+]

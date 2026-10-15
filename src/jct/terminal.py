@@ -1,10 +1,14 @@
 """Rich terminal interface for JCT semantic code search."""
 
+import re
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Sequence
 
 from rich import box
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.progress import (
     BarColumn,
@@ -12,6 +16,7 @@ from rich.progress import (
     SpinnerColumn,
     TextColumn,
 )
+from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
@@ -26,46 +31,154 @@ QUERY_COLORS = [
 ]
 
 
+def _copy_to_clipboard(code: str) -> bool:
+    """Copy text to the system clipboard when a clipboard utility is available."""
+    if sys.platform == "win32":
+        commands = [["clip"]]
+    elif sys.platform == "darwin":
+        commands = [["pbcopy"]]
+    else:
+        commands = [
+            ["wl-copy"],
+            ["xclip", "-selection", "clipboard"],
+            ["xsel", "--clipboard", "--input"],
+        ]
+
+    for command in commands:
+        try:
+            result = subprocess.run(
+                command,
+                input=code,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        except (FileNotFoundError, OSError):
+            continue
+
+        if result.returncode == 0:
+            return True
+
+    return False
+
+
+def display_code(
+    code: str,
+    title: str = "PYTHON CODE",
+    language: str = "python",
+    interactive_copy: bool = True,
+) -> None:
+    """Display syntax-highlighted code and optionally offer clipboard copying."""
+    if not code.strip():
+        return
+
+    clean_code = code.rstrip()
+
+    syntax = Syntax(
+        clean_code,
+        language,
+        theme="monokai",
+        line_numbers=True,
+        word_wrap=True,
+        indent_guides=True,
+    )
+
+    console.print(
+        Panel(
+            syntax,
+            title=f"[bold green]{title}[/bold green]",
+            border_style="green",
+            padding=(1, 2),
+        )
+    )
+
+    # Do not prompt when output is redirected or the command is noninteractive.
+    if not interactive_copy:
+        return
+
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        return
+
+    console.print(
+        "[dim]Press C to copy this code, or press Enter to continue.[/dim]"
+    )
+
+    try:
+        choice = input("> ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        console.print()
+        return
+
+    if choice == "c":
+        if _copy_to_clipboard(clean_code):
+            console.print(
+                "[bold bright_green]SUCCESS[/bold bright_green] "
+                "Code copied to the clipboard."
+            )
+        else:
+            console.print(
+                "[bold yellow]Clipboard unavailable.[/bold yellow] "
+                "Select the code above and copy it manually."
+            )
+
+
+def display_markdown_with_code(
+    answer: str,
+    interactive_copy: bool = True,
+) -> None:
+    """Render Markdown responses and syntax-highlight fenced code blocks."""
+    if not answer.strip():
+        console.print("[yellow]The response was empty.[/yellow]")
+        return
+
+    # Match Markdown fenced blocks such as ```python ... ```.
+    pattern = re.compile(
+        r"```([^\n`]*)\n(.*?)```",
+        flags=re.DOTALL,
+    )
+
+    position = 0
+
+    for match in pattern.finditer(answer):
+        preceding_text = answer[position:match.start()]
+
+        if preceding_text.strip():
+            console.print(Markdown(preceding_text))
+
+        language = match.group(1).strip() or "python"
+        code = match.group(2)
+
+        display_code(
+            code,
+            title=f"CODE EXAMPLE ({language.upper()})",
+            language=language,
+            interactive_copy=interactive_copy,
+        )
+
+        position = match.end()
+
+    remaining_text = answer[position:]
+
+    if remaining_text.strip():
+        console.print(Markdown(remaining_text))
+
+
 def display_banner() -> None:
     """Display the JCT welcome banner."""
     logo = Text()
 
+    logo.append("       J C T\n", style="bold bright_cyan")
+    logo.append("  JOSEPH COOL TOOL\n", style="bold white")
     logo.append(
-        "     ██╗ ██████╗████████╗\n",
-        style="bold bright_cyan",
-    )
-    logo.append(
-        "     ██║██╔════╝╚══██╔══╝\n",
-        style="bold bright_cyan",
-    )
-    logo.append(
-        "     ██║██║        ██║   \n",
-        style="bold bright_cyan",
-    )
-    logo.append(
-        "██   ██║██║        ██║   \n",
-        style="bold bright_blue",
-    )
-    logo.append(
-        "╚█████╔╝╚██████╗   ██║   \n",
-        style="bold bright_blue",
-    )
-    logo.append(
-        " ╚════╝  ╚═════╝   ╚═╝   \n",
-        style="bold bright_blue",
-    )
-
-    logo.append("\n       JOSEPH COOL TOOL\n", style="bold white")
-    logo.append(
-        "   Semantic Search for Python Code\n\n",
+        "Semantic Search for Python Code\n\n",
         style="bright_cyan",
     )
     logo.append(
-        " Find code by what it DOES,\n",
+        "Find code by what it DOES,\n",
         style="bold white",
     )
     logo.append(
-        "       not just what it says.",
+        "not just what it says.",
         style="italic bright_magenta",
     )
 
@@ -207,21 +320,21 @@ def display_search_status(message: str) -> None:
 def display_success(message: str) -> None:
     """Display a success message."""
     console.print(
-        f"[bold bright_green]✓ SUCCESS[/bold bright_green]  {message}"
+        f"[bold bright_green]SUCCESS[/bold bright_green]  {message}"
     )
 
 
 def display_warning(message: str) -> None:
     """Display a warning message."""
     console.print(
-        f"[bold bright_yellow]⚠ WARNING[/bold bright_yellow]  {message}"
+        f"[bold bright_yellow]WARNING[/bold bright_yellow]  {message}"
     )
 
 
 def display_error(message: str) -> None:
     """Display an error message."""
     console.print(
-        f"[bold bright_red]✗ ERROR[/bold bright_red]  {message}"
+        f"[bold bright_red]ERROR[/bold bright_red]  {message}"
     )
 
 
@@ -347,13 +460,10 @@ def display_result_details(
         )
 
     if code:
-        console.print(
-            Panel(
-                code,
-                title="[bold green]PYTHON CODE[/bold green]",
-                border_style="green",
-                padding=(1, 2),
-            )
+        display_code(
+            code,
+            title="PYTHON CODE",
+            language="python",
         )
 
 
@@ -376,22 +486,22 @@ def display_help() -> None:
         "Describe the behavior you want to find, not just a "
         "specific function name.\n\n"
         "[bold green]Good examples[/bold green]\n"
-        "  • Find code that safely reads a file.\n"
-        "  • Find functions that validate user input.\n"
-        "  • Find code that catches exceptions.\n"
-        "  • Find a function that sorts a list.\n"
-        "  • Find code that saves data to a JSON file.\n\n"
+        "  - Find code that safely reads a file.\n"
+        "  - Find functions that validate user input.\n"
+        "  - Find code that catches exceptions.\n"
+        "  - Find a function that sorts a list.\n"
+        "  - Find code that saves data to a JSON file.\n\n"
         "[bold yellow]Tips[/bold yellow]\n"
-        "  • Describe the desired behavior clearly.\n"
-        "  • Try suggested queries when results are weak.\n"
-        "  • A lower threshold may return more matches.\n"
-        "  • AI-generated fallback responses are not retrieved code "
+        "  - Describe the desired behavior clearly.\n"
+        "  - Try suggested queries when results are weak.\n"
+        "  - A lower threshold may return more matches.\n"
+        "  - AI-generated fallback responses are not retrieved code "
         "and must be verified."
     )
 
     console.print(
         Panel(
-            help_text,
+            Markdown(help_text),
             title="[bold bright_cyan]JCT HELP[/bold bright_cyan]",
             border_style="bright_blue",
             padding=(1, 2),

@@ -23,6 +23,7 @@ from jct.terminal import (
     display_error,
     display_help,
     display_main_menu,
+    display_markdown_with_code,
     display_no_results,
     display_original_query,
     display_reformulated_queries,
@@ -165,7 +166,11 @@ def run_fallback(query: str, no_llm: bool = False) -> int:
             "from your project or ZIP archive."
         )
         print("-" * 65)
-        print(answer)
+
+        # Render Markdown normally and syntax-highlight fenced code blocks.
+        # The terminal helper offers clipboard copying in interactive sessions.
+        display_markdown_with_code(answer)
+
         print("-" * 65)
         return 0
 
@@ -315,19 +320,15 @@ def _search_selected_queries(
     use_typo_correction: bool = True,
 ) -> list[dict[str, Any]]:
     """Execute the requested search strategy."""
-    options = {
-        "top_k": top_k,
-        "min_score": min_score,
-        "use_query_expansion": use_query_expansion,
-        "use_typo_correction": use_typo_correction,
-    }
-
     if strategy == "automatic":
         return search_with_reformulation(
             query_text,
             chunks,
             embeddings,
-            **options,
+            top_k=top_k,
+            min_score=min_score,
+            use_query_expansion=use_query_expansion,
+            use_typo_correction=use_typo_correction,
         )
 
     if strategy == "manual":
@@ -340,12 +341,22 @@ def _search_selected_queries(
         )
 
         ranked_lists = [
-            search(query, chunks, embeddings, **options)
+            search(
+                query,
+                chunks,
+                embeddings,
+                top_k=top_k,
+                min_score=min_score,
+                use_query_expansion=use_query_expansion,
+                use_typo_correction=use_typo_correction,
+            )
             for query in queries
         ]
 
         nonempty_lists = [
-            ranked_list for ranked_list in ranked_lists if ranked_list
+            ranked_list
+            for ranked_list in ranked_lists
+            if ranked_list
         ]
 
         if not nonempty_lists:
@@ -360,7 +371,10 @@ def _search_selected_queries(
         query_text,
         chunks,
         embeddings,
-        **options,
+        top_k=top_k,
+        min_score=min_score,
+        use_query_expansion=use_query_expansion,
+        use_typo_correction=use_typo_correction,
     )
 
 
@@ -566,7 +580,11 @@ def run_search(args: argparse.Namespace) -> int:
             display_source_info(path)
 
         try:
-            if not disable_reformulation and not json_mode and interactive_terminal:
+            if (
+                not disable_reformulation
+                and not json_mode
+                and interactive_terminal
+            ):
                 selected_query, strategy = _choose_search_query(
                     query,
                     interactive=True,

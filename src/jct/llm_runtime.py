@@ -80,6 +80,27 @@ def _explicitly_requests_code(query: str) -> bool:
     )
 
 
+def _should_include_starter_code(query: str) -> bool:
+    """Allow starter code for selected programming-topic queries."""
+    if _explicitly_requests_code(query):
+        return True
+
+    normalized = re.sub(r"\s+", " ", query.casefold()).strip()
+
+    starter_code_topics = (
+        "ast chunking",
+        "python ast chunking",
+        "chunking python code",
+        "chunk python code",
+        "python code chunking",
+        "parse python source",
+        "python source parsing",
+        "python ast parser",
+    )
+
+    return any(topic in normalized for topic in starter_code_topics)
+
+
 def _remove_code_blocks(answer: str) -> str:
     """Remove fenced code blocks from a generated answer."""
     cleaned = CODE_FENCE_PATTERN.sub(
@@ -104,14 +125,14 @@ def _apply_output_safety(query: str, answer: str) -> str:
 
         return cleaned + notice
 
-    if not _explicitly_requests_code(query):
+    if not _should_include_starter_code(query):
         cleaned = _remove_code_blocks(answer)
 
         if cleaned != answer.strip():
             cleaned += (
                 "\n\nJCT SAFETY NOTICE: Code was omitted because your "
-                "request did not explicitly ask for code. Ask JCT for "
-                "a code example if you want generated code."
+                "request did not explicitly request code or match a "
+                "supported starter-code topic."
             )
 
         return cleaned
@@ -338,36 +359,47 @@ def setup_model() -> None:
 
 
 def generate_fallback(query: str) -> str:
-    """Generate a response with application-level output safeguards."""
+    """Generate a helpful fallback with application-level safeguards."""
     is_consensus = _is_consensus_query(query)
     allows_code = (
-        _explicitly_requests_code(query) and not is_consensus
+        _should_include_starter_code(query) and not is_consensus
     )
 
     if is_consensus:
         task_instruction = (
-            "Explain the concepts and design of distributed consensus. "
-            "Do not provide source code, pseudocode, or code blocks. "
-            "You may explain Paxos or Raft at a conceptual level. "
-            "Describe protocol roles, phases, quorum requirements, and "
-            "limitations accurately. Do not claim a toy simulation is "
-            "a genuine consensus implementation."
+            "Explain the concepts and design of distributed consensus "
+            "in beginner-friendly language. Do not provide source code, "
+            "pseudocode, or code blocks. You may explain Paxos or Raft "
+            "at a conceptual level. Describe protocol roles, phases, "
+            "quorum requirements, and limitations accurately. "
+            "Do not claim a toy simulation is a genuine consensus "
+            "implementation."
         )
     elif allows_code:
         task_instruction = (
-            "The user explicitly requested code. You may provide an "
-            "AI-generated example, but explain assumptions and limitations. "
-            "Do not claim the code was tested or verified."
+            "Provide a beginner-friendly explanation and a practical "
+            "Python starter implementation relevant to the user's query. "
+            "Organize the response into four sections: Explanation, "
+            "Starter code, Official documentation, and Next steps. "
+            "Put the starter implementation in a fenced Python code block. "
+            "Explain how the code works and identify assumptions and "
+            "limitations. Include relevant official documentation URLs "
+            "only when you know them confidently. Suggest how to run, "
+            "test, and adapt the example. Clearly state that the code "
+            "is AI-generated and unverified; never claim it was tested."
         )
     else:
         task_instruction = (
-            "Explain the topic in ordinary prose. Do not provide source "
-            "code, pseudocode, or fenced code blocks because the user did "
-            "not explicitly request code."
+            "Explain the topic in ordinary, beginner-friendly prose. "
+            "Do not provide source code, pseudocode, or fenced code "
+            "blocks because the user did not explicitly request code "
+            "and the query does not match an approved starter-code topic. "
+            "Use a simple conceptual example in words if helpful."
         )
 
     prompt = f"""
-You are JCT's AI fallback assistant.
+You are JCT's AI fallback assistant, helping users understand concepts
+when semantic search does not return a sufficiently relevant match.
 
 JCT searched the user's project or ZIP archive but did not find code
 that met its relevance threshold.
@@ -378,12 +410,39 @@ User request:
 Response instructions:
 {task_instruction}
 
+For starter-code responses, follow the four requested sections in order.
+
+Documentation guidance:
+- Python AST:
+  https://docs.python.org/3/library/ast.html
+- Python built-in functions, including open():
+  https://docs.python.org/3/library/functions.html#open
+- Python pathlib:
+  https://docs.python.org/3/library/pathlib.html
+- Python exceptions:
+  https://docs.python.org/3/tutorial/errors.html
+- Python regular expressions:
+  https://docs.python.org/3/library/re.html
+- Python unit testing:
+  https://docs.python.org/3/library/unittest.html
+- Python documentation index:
+  https://docs.python.org/3/
+
+Include only documentation links relevant to the user's question.
+Do not invent URLs or claim that a link was verified during this request.
+
 General rules:
 - Do not claim you inspected files that were not supplied to you.
 - Do not claim generated content was retrieved from the user's archive.
 - Do not invent test results, benchmark results, or correctness guarantees.
 - Clearly distinguish a conceptual explanation from an implementation.
-- Prefer a concise and accurate answer over a long, speculative answer.
+- Never claim generated code was tested or verified.
+- Do not state that a search result exists unless it was actually
+  returned by JCT's search system.
+- Do not provide code unless the response instructions explicitly allow it.
+- For distributed consensus queries, never provide source code,
+  pseudocode, or code blocks, even if the user requests implementation.
+- Prefer accurate, useful answers over long or speculative answers.
 - If uncertain, state the uncertainty.
 """
 
